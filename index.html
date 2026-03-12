@@ -4,11 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Entrega-JS</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
-    <h2>Hola profe :) la temática es sobre una tienda de ropa (simulador) -></h2>
+      <div class="contenedor">
 
-    <script src="main.js"></script>
+        <h1>Tienda Online de Moda</h1>
+
+        <section>
+            <input type="text" id="nombreInput" placeholder="Ingresá tu nombre">
+            <button id="saludarBtn">Ingresar</button>
+            <p id="saludo"></p>
+            <p id="mensaje"></p>
+        </section>
+
+        <h3>Productos</h3>
+        <div id="productos"></div>
+
+        <h3>Carrito</h3>
+        <ul id="carrito"></ul>
+
+        <p id="total"></p>
+
+    </div>
+
+    <script src="/js/main.js"></script>
 </body>
 </html>
