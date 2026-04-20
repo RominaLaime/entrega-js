@@ -3,32 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entrega-JS</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Tienda Online de Moda</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
-      <div class="contenedor">
+<main class="contenedor">
 
-        <h1>Tienda Online de Moda</h1>
+    <h1>Tienda Online de Moda</h1>
 
-        <section>
-            <input type="text" id="nombreInput" placeholder="Ingresá tu nombre">
-            <button id="saludarBtn">Ingresar</button>
-            <p id="saludo"></p>
-            <p id="mensaje"></p>
-        </section>
+   
+    <section class="saludo-section">
+        <input type="text" id="nombreInput" placeholder="Ingresá tu nombre">
+        <button id="saludarBtn">Ingresar</button>
+        <p id="saludo"></p>
+        <p id="mensaje"></p>
+    </section>
 
-        <h3>Productos</h3>
-        <div id="productos"></div>
 
-        <h3>Carrito</h3>
-        <ul id="carrito"></ul>
+    <h2>Productos disponibles</h2>
+    <div id="productos"></div>
 
-        <p id="total"></p>
+   
+    <h2>Carrito</h2>
+    <ul id="carrito"></ul>
 
+    <p id="total"></p>
+
+    <div class="acciones-carrito">
+        <button id="vaciarCarritoBtn">Vaciar carrito</button>
+        <button id="comprarBtn">Finalizar compra</button>
     </div>
 
-    <script src="/js/main.js"></script>
+</main>
+
+<!-- librería -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="js/main.js"></script>
+
 </body>
 </html>
