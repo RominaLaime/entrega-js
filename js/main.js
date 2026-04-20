@@ -1,89 +1,166 @@
-//Saludo
-let botonSaludo = document.getElementById("saludarBtn");
+//mensaje para avisos
+let mensaje = document.getElementById("mensaje");
 
-    botonSaludo.addEventListener("click", function(){
+//funcion alertas
+function mostrarAlerta(texto, tipo = "info"){
+    if (typeof Swal !== "undefined"){
+        Swal.fire({
+            icon: tipo,
+            text: texto,
+            background: "#f7f5f4",
+            color: "#594540",
+            customClass: {
+                popup: "swal-popup",
+                title: "swal-title",
+                confirmButton: "swal-confirm",
+                cancelButton: "swal-cancel"
+            }
+        });
+    } else {
+        mensaje.innerText = texto;
+    }
+}
 
-        let nombre = document.getElementById("nombreInput").value;
-
-        if(!isNaN(nombre) || nombre === ""){
-            mensaje.innerText = "Por favor ingresá un nombre válido";
-            return;
-        }
-
-        mensaje.innerText = "";
-
-        document.getElementById("saludo").innerText =
-        "Hola " + nombre + ", bienvenid@ a nuestra tienda online de moda.";
+//formateo de precio
+function formatearPrecio(precio){
+    return precio.toLocaleString("es-AR", {
+        style: "currency",
+        currency: "ARS"
     });
+}
 
-//Mensaje para mostrar error o avisos
-    let mensaje = document.getElementById("mensaje");
+//traducción
+function traducirProducto(texto){
+    let diccionario = {
+        "shirt": "remera",
+        "t-shirt": "remera",
+        "jacket": "campera",
+        "coat": "abrigo",
+        "jeans": "jean",
+        "pants": "pantalón",
+        "sweater": "suéter",
+        "hoodie": "buzo",
+        "dress": "vestido"
+    };
 
-//Productos
-let ropa = [
-    {nombre:"remera", precio:15000},
-    {nombre:"pantalon", precio:30000},
-    {nombre:"buzo", precio:40000}
-];
+    let textoLower = texto.toLowerCase();
 
-
-let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
-
-//Muestro productos
-let contenedorProductos = document.getElementById("productos");
-
-ropa.forEach(producto => {
-
-    let div = document.createElement("div");
-
-    div.innerHTML = `
-        <p>${producto.nombre} - $${producto.precio}</p>
-        <input type="number" min="1" placeholder="Cantidad" id="cantidad-${producto.nombre}">
-        <button>Agregar al carrito</button>
-    `;
-
-    div.querySelector("button").addEventListener("click", function(){
-
-        let cantidadInput = document.getElementById(`cantidad-${producto.nombre}`).value;
-        let cantidad = parseInt(cantidadInput);
-
-        if(isNaN(cantidad) || cantidad <= 0){
-            mensaje.innerText = "Ingresá una cantidad válida.";
-            return;
+    for (let palabra in diccionario){
+        if(textoLower.includes(palabra)){
+            return diccionario[palabra];
         }
+    }
 
-        mensaje.innerText = "";
+    return texto;
+}
 
-        agregarAlCarrito(producto, cantidad);
-    });
+//saludo
+document.getElementById("saludarBtn").addEventListener("click", function(){
 
-    contenedorProductos.appendChild(div);
+    let nombre = document.getElementById("nombreInput").value.trim();
 
+    if(!nombre || !isNaN(nombre)){
+        mostrarAlerta("Ingresá un nombre válido", "error");
+        return;
+    }
+
+    mensaje.innerText = "";
+
+    document.getElementById("saludo").innerText =
+    "Hola " + nombre + ", bienvenid@ a la tienda";
 });
 
-//Agrego producto/s al carrito
-    function agregarAlCarrito(producto, cantidad){
+//contenedor productos
+let contenedorProductos = document.getElementById("productos");
 
-    carrito.push({
-        producto: producto.nombre,
-        precio: producto.precio,
-        cantidad: cantidad
+//consumo de API
+Promise.all([
+    fetch("https://fakestoreapi.com/products/category/men's clothing").then(res => res.json()),
+    fetch("https://fakestoreapi.com/products/category/women's clothing").then(res => res.json())
+])
+.then(([hombres, mujeres]) => {
+
+    let productos = [...hombres, ...mujeres];
+
+    if(productos.length === 0){
+        mensaje.innerText = "No hay productos disponibles";
+        return;
+    }
+
+    mostrarProductos(productos);
+})
+.catch(() => {
+    mensaje.innerText = "Error al cargar productos";
+});
+
+//mostrar productos
+function mostrarProductos(productos){
+
+    contenedorProductos.innerHTML = "";
+
+    productos.forEach(producto => {
+
+        let nombreTraducido = traducirProducto(producto.title);
+
+        let div = document.createElement("div");
+
+        div.innerHTML = `
+            <p>${nombreTraducido} - ${formatearPrecio(producto.price)}</p>
+            <input type="number" min="1" placeholder="Cantidad" id="cantidad-${producto.id}">
+            <button>Agregar</button>
+        `;
+
+        div.querySelector("button").addEventListener("click", function(){
+
+            let input = document.getElementById(`cantidad-${producto.id}`);
+            let cantidad = parseInt(input.value);
+
+            if(isNaN(cantidad) || cantidad <= 0){
+                mostrarAlerta("Ingresá una cantidad válida", "error");
+                return;
+            }
+
+            agregarAlCarrito(producto, cantidad);
+
+            mostrarAlerta("Producto agregado", "success");
+
+            input.value = "";
+        });
+
+        contenedorProductos.appendChild(div);
     });
+}
+
+//carrito
+let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+
+//agregar al carrito
+function agregarAlCarrito(producto, cantidad){
+
+    let nombreTraducido = traducirProducto(producto.title);
+
+    let existente = carrito.find(item => item.producto === nombreTraducido);
+
+    if(existente){
+        existente.cantidad += cantidad;
+    } else {
+        carrito.push({
+            producto: nombreTraducido,
+            precio: producto.price,
+            cantidad: cantidad
+        });
+    }
 
     localStorage.setItem("carrito", JSON.stringify(carrito));
 
     mostrarCarrito();
 }
 
-
-
-//Compra - Carrito
+//mostrar carrito
 function mostrarCarrito(){
 
-    let listaCarrito = document.getElementById("carrito");
-
-    listaCarrito.innerHTML = "";
+    let lista = document.getElementById("carrito");
+    lista.innerHTML = "";
 
     let total = 0;
 
@@ -93,34 +170,92 @@ function mostrarCarrito(){
 
         let subtotal = item.precio * item.cantidad;
 
-        li.innerText =
-        item.producto + " x" + item.cantidad + " - $" + subtotal;
+        li.innerHTML = `
+            ${item.producto} x${item.cantidad} - ${formatearPrecio(subtotal)}
+            <button>Eliminar</button>
+        `;
 
-        let botonEliminar = document.createElement("button");
-        botonEliminar.innerText = "Eliminar";
-
-        botonEliminar.addEventListener("click", function(){
+        li.querySelector("button").addEventListener("click", function(){
 
             carrito.splice(index,1);
-
             localStorage.setItem("carrito", JSON.stringify(carrito));
-
             mostrarCarrito();
 
+            mostrarAlerta("Producto eliminado", "info");
         });
 
-        li.appendChild(botonEliminar);
-
-        listaCarrito.appendChild(li);
+        lista.appendChild(li);
 
         total += subtotal;
-
     });
 
     document.getElementById("total").innerText =
-    "Total de la compra: $" + total;
+    "Total: " + formatearPrecio(total);
 }
 
+//vaciar carrito
+document.getElementById("vaciarCarritoBtn").addEventListener("click", function(){
 
+    if(carrito.length === 0){
+        mostrarAlerta("El carrito ya está vacío");
+        return;
+    }
+
+    Swal.fire({
+        title: "¿Vaciar carrito?",
+        background: "#f7f5f4",
+        color: "#594540",
+        showCancelButton: true,
+        confirmButtonText: "Sí",
+        cancelButtonText: "Cancelar",
+        customClass: {
+            popup: "swal-popup",
+            title: "swal-title",
+            confirmButton: "swal-confirm",
+            cancelButton: "swal-cancel"
+        }
+    }).then(result => {
+
+        if(result.isConfirmed){
+            carrito = [];
+            localStorage.removeItem("carrito");
+            mostrarCarrito();
+            mostrarAlerta("Carrito vaciado", "success");
+        }
+    });
+});
+
+//finalizar compra
+document.getElementById("comprarBtn").addEventListener("click", function(){
+
+    if(carrito.length === 0){
+        mostrarAlerta("El carrito está vacío", "error");
+        return;
+    }
+
+    Swal.fire({
+        title: "¿Confirmar compra?",
+        background: "#f7f5f4",
+        color: "#594540",
+        showCancelButton: true,
+        confirmButtonText: "Comprar",
+        cancelButtonText: "Cancelar",
+        customClass: {
+            popup: "swal-popup",
+            title: "swal-title",
+            confirmButton: "swal-confirm",
+            cancelButton: "swal-cancel"
+        }
+    }).then(result => {
+
+        if(result.isConfirmed){
+            carrito = [];
+            localStorage.removeItem("carrito");
+            mostrarCarrito();
+            mostrarAlerta("Compra realizada con éxito", "success");
+        }
+    });
+});
+
+//inicio
 mostrarCarrito();
-
